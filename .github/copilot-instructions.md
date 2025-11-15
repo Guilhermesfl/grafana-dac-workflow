@@ -25,7 +25,9 @@ This repository demonstrates a dashboard-as-code workflow for Grafana using the 
 - **MCP usage**: Interact with Grafana programmatically using MCP commands in VS Code Copilot Chat
 
 ## Integration Points
-- **Grafana MCP**: Requires VS Code Insiders and MCP server (`@grafana/mcp-server-grafana`)
+- **Grafana MCP**: Requires VS Code (1.102+) and MCP server (`@grafana/mcp-server-grafana`)
+  - Configure via `MCP: Open User Configuration` command to create `mcp.json`
+  - Enable with `chat.mcp.access: "all"` setting if needed
 - **Prometheus**: Configured via `prometheus.yml` and auto-provisioned in Grafana
 - **Node Exporter**: Provides system metrics, scraped by Prometheus
 

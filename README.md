@@ -18,8 +18,7 @@ This approach complements RBAC and backups—use provisioning for standardized d
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- VS Code Insiders with MCP support
-- Node.js and npm (for Grafana MCP server)
+- VS Code (version 1.102 or later) with GitHub Copilot
 - Git
 
 ## Project Structure
@@ -33,6 +32,8 @@ grafana-mcp-workflow/
 │   │   └── dashboard.yml          # Dashboard provisioning config
 │   └── datasources/
 │       └── prometheus.yml         # Prometheus datasource config
+├── .vscode/
+│   └── mcp.json                   # MCP server configuration
 ├── dashboards/
 │   └── node-exporter.json         # Versioned dashboard JSON (created later)
 ├── .env.example                   # Environment variable template
@@ -114,38 +115,53 @@ GRAFANA_API_TOKEN=your_actual_token_here
 
 ### Step 5: Install and Configure Grafana MCP
 
-Install the Grafana MCP server:
+The Grafana MCP server runs via Docker and provides programmatic access to your Grafana instance.
 
-```bash
-npm install -g @grafana/mcp-server-grafana
-```
+**Create workspace MCP configuration:**
 
-Configure VS Code Insiders MCP settings:
-
-1. Open VS Code Insiders settings (JSON): `Cmd/Ctrl + Shift + P` → `Preferences: Open User Settings (JSON)`
-2. Add the MCP configuration:
+1. Create `.vscode/mcp.json` in your project root:
 
 ```json
 {
-  "github.copilot.chat.mcp.enabled": true,
-  "github.copilot.chat.mcp.servers": {
-    "grafana": {
-      "command": "npx",
-      "args": [
-        "@grafana/mcp-server-grafana"
-      ],
-      "env": {
-        "GRAFANA_URL": "http://localhost:3000",
-        "GRAFANA_TOKEN": "your_actual_token_here"
-      }
-    }
-  }
+	"servers": {
+		"grafana": {
+			"command": "docker",
+			"args": [
+				"run",
+				"--rm",
+				"-i",
+				"-e",
+				"GRAFANA_URL",
+				"-e",
+				"GRAFANA_SERVICE_ACCOUNT_TOKEN",
+				"mcp/grafana",
+				"-t",
+				"stdio",
+				"-debug"
+			],
+			"env": {
+				"GRAFANA_URL": "http://host.docker.internal:3000",
+				"GRAFANA_SERVICE_ACCOUNT_TOKEN": "your_service_account_token_here",
+				"GRAFANA_ORG_ID": "1"
+			}
+		}
+	},
+	"inputs": []
 }
 ```
 
-3. Restart VS Code Insiders
+2. Replace `your_service_account_token_here` with the token you created in Step 4
 
-**📸 Screenshot placeholder**: VS Code MCP configuration in settings.json
+3. **Important for macOS/Windows**: Use `http://host.docker.internal:3000` as the GRAFANA_URL (not `localhost`) so the Docker container can reach your host machine
+
+4. Ensure MCP support is enabled in VS Code settings:
+   - Open Command Palette: `Cmd/Ctrl + Shift + P`
+   - Run: `Preferences: Open User Settings (JSON)`
+   - Add or verify: `"chat.mcp.access": "all"`
+
+5. Restart VS Code to load the MCP server
+
+**📸 Screenshot placeholder**: VS Code MCP configuration in .vscode/mcp.json
 
 ### Step 6: Extract Dashboard JSON via MCP
 
